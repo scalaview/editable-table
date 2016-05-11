@@ -14,6 +14,11 @@ $.fn.editableTableWidget = function (options) {
 			active,
 			showEditor = function (select) {
 				active = element.find('td:focus');
+				var evt = $.Event('focus');
+				active.trigger(evt, evt);
+				if (evt.result === false) {
+					return;
+				}
 				if (active.length) {
 					editor.val(active.text())
 						.removeClass('error')
@@ -36,9 +41,17 @@ $.fn.editableTableWidget = function (options) {
 					return true;
 				}
 				originalContent = active.html();
-				active.text(text).trigger(evt, text);
-				if (evt.result === false) {
+				active.trigger(evt, text);
+				if(typeof evt.result === 'object'){
+					evt.result.then(function(result){
+						active.text(text);
+					}).catch(function(err){
+						active.html(originalContent);
+					})
+				}else if(evt.result === false) {
 					active.html(originalContent);
+				}else{
+					active.text(text);
 				}
 			},
 			movement = function (element, keycode) {
@@ -128,4 +141,3 @@ $.fn.editableTableWidget.defaultOptions = {
 					  'border', 'border-top', 'border-bottom', 'border-left', 'border-right'],
 	editor: $('<input>')
 };
-
